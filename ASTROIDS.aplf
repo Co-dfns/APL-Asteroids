@@ -1,0 +1,81 @@
+ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
+	;frame
+	;CON;WSU;TICK;XT;ERR;sWAT
+	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE
+
+'Conga'⎕CY'conga'
+DRC←Conga.Init'ASTROIDS'
+srv←DRC.Srv '' 'localhost' 4572 'http' ('Options' DRC.Options.(WSAutoUpgrade))
+
+title←'Astroids - Copyright (c) 2025 by Aaron W. Hsu'
+hr←⎕NEW'HtmlRenderer'(⊂'Caption' title)
+hr.(Coord Size)←'ScaledPixel' (540 680)
+_←'<!DOCTYPE html><html><head>'
+_,←'<style>'
+_,←'	body{overflow:hidden;margin:0px;padding:10px;background:#202020;}'
+_,←'	#d{border:1px solid green;display:block;padding:0px;margin:0px auto;}'
+_,←'</style>'
+_,←'<script>'
+_,←'var d, c, s;'
+_,←'function init() {'
+_,←'	d = document.getElementById("d");'
+_,←'	c = d.getContext("2d");'
+_,←'	s = new WebSocket("ws://localhost:4572/");'
+_,←'	s.onmessage = (evt) => {eval(evt.data);};'
+_,←'}'
+_,←'window.onload = init;'
+_,←'</script>'
+_,←'</head><body>'
+_,←'<canvas id="d" height="480" width="640">Loading...</canvas>'
+_,←'</body></html>'
+hr.HTML←_
+
+CON WSU TICK XT ERR sWAT←1+⍳6
+LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 100
+	{0::1 ⋄ 0⊣hr.Active}⍬:	XT	⍝ Application closed by user
+	100=rc:			TICK	⍝ Timeout
+	0≠rc:			ERR	⍝ Error in serv
+	rc obj evt dat∘←z
+	'Connect'≡evt:		CON	⍝ Connection from GUI
+	'WSUpgrade'≡evt:	WSU	⍝ GUI WebSocketUpgrade
+	sWAT
+}
+
+frame←0
+
+SUCC←{⎕←'Thanks for playing!'}
+FAIL←{⎕←obj evt dat ⋄ ⎕←'Encountered an unrecoverable error. Exiting...'}
+rWAT←{⎕←obj evt dat ⋄ ⎕←'Wat? This should not happen. SEND HELP!'}
+REG←{gui∘←obj}
+CLOSE←{_←DRC.Close gui}
+RENDER←{frame∘←4|frame+1 ⋄ _←''
+	_,←'c.clearRect(0, 0, 600, 640);'
+	_,←'c.font = "100px Courier";'
+	_,←'c.fillStyle = "white";'
+	_,←'c.fillText("',((7+frame)↑'Loading...'),'", 10, 110);'
+	_←DRC.Send gui (_ 1 1)
+}
+
+∆_:→⎕LC+LISTEN⍬
+∆_CON:	REG⍬	⋄ →∆_CON_
+∆_WSU:	rWAT⍬	⋄ ∘∘∘
+∆_TICK:		⋄ →∆_
+∆_XT:	SUCC⍬	⋄ →0
+∆_ERR:	FAIL⍬	⋄ ∘∘∘
+∆_WAT:	rWAT⍬ 	⋄ ∘∘∘
+
+∆_CON_:→⎕LC+LISTEN⍬
+∆_CON_CON:	CLOSE⍬ ⋄ REG⍬	⋄ →∆_CON_
+∆_CON_WSU:	RENDER⍬		⋄ →∆_CON_WSU_
+∆_CON_TICK:			⋄ →∆_CON_
+∆_CON_XT:	SUCC⍬		⋄ →0
+∆_CON_ERR:	FAIL⍬		⋄ ∘∘∘
+∆_CON_WAT:	rWAT⍬ 		⋄ ∘∘∘
+
+∆_CON_WSU_:→⎕LC+LISTEN⍬
+∆_CON_WSU_CON:	CLOSE⍬ ⋄ REG⍬	⋄ →∆_CON_
+∆_CON_WSU_WSU:	rWAT⍬		⋄ ∘∘∘
+∆_CON_WSU_TICK:	RENDER⍬		⋄ →∆_CON_WSU_
+∆_CON_WSU_XT:	SUCC⍬		⋄ →0
+∆_CON_WSU_ERR:	FAIL⍬		⋄ ∘∘∘
+∆_CON_WSU_WAT:	rWAT⍬ 		⋄ ∘∘∘
