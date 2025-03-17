@@ -1,9 +1,9 @@
 ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
 	;height;width;frame;frame_size
-	;ship_dir;ship_input
+	;ship_dir;ship_input;is_collision;msg;msg_color
 	;coords;sizes;sprites;vels;dirs
-	;CON;WSU;KdDN;KdUP;KdLT;KdRT;KuDN;KuUP;KuLT;KuRT;TICK;XT;ERR;sWAT
-	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE;GODOWN;GOUP;GOLEFT;GORIGHT
+	;CON;WSU;KdDN;KdUP;KdLT;KdRT;KuDN;KuUP;KuLT;KuRT;BUMP;TICK;XT;ERR;sWAT
+	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE;GODOWN;GOUP;GOLEFT;GORIGHT;DEAD
 	;NODOWN;NOUP;NOLEFT;NORIGHT
 
 'Conga'⎕CY'conga'
@@ -34,15 +34,18 @@ _,←'}'
 _,←'function handle_keyup(evt) {'
 _,←'	s.send("KU_" + evt.key);'
 _,←'}'
-_,←'function render(objs) {'
+_,←'function render(msg, color, objs) {'
 _,←'	for (let i = 0; i < objs.length; i++) {'
 _,←'		objs[i][0] = document.getElementById(objs[i][0]);'
 _,←'	}'
+_,←'	c.font = "50px Courier";'
+_,←'	c.fillStyle = color;'
 _,←'	c.clearRect(0, 0, d.width, d.height);'
 _,←'	for (let i = 0; i < objs.length; i++) {'
 _,←'		const obj = objs[i];'
 _,←'		c.drawImage(obj[0], obj[1], obj[2], obj[3], obj[4]);'
 _,←'	}'
+_,←'	c.fillText(msg, 75, 250);'
 _,←'}'
 _,←'window.onload = init;'
 _,←'</script>'
@@ -55,9 +58,10 @@ _,←'<canvas id="d" height="480" width="640">Loading...</canvas>'
 _,←'</body></html>'
 hr.HTML←_
 
-CON WSU KdDN KdUP KdLT KdRT KuDN KuUP KuLT KuRT TICK XT ERR sWAT←1+⍳14
+CON WSU KdDN KdUP KdLT KdRT KuDN KuUP KuLT KuRT TICK BUMP XT ERR sWAT←1+⍳15
 LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 	{0::1 ⋄ 0⊣hr.Active}⍬:		XT	⍝ Application closed by user
+	is_collision⍬:			BUMP	⍝ Ship has hit something
 	100=rc:				TICK	⍝ Timeout
 	0≠rc:				ERR	⍝ Error in serv
 	rc obj evt dat∘←z
@@ -81,6 +85,13 @@ frame_size←640 480 ⋄ frame←0
 sprites←'ship' 'alien'
 vels←3 1 ⋄ dirs←(0 0)(0 1) ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
 ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0)
+msg←'' ⋄ msg_color←0
+
+is_collision←{
+	xb yb←0⊃coords ⋄ xe ye←xb yb+0⊃sizes
+	xsb ysb←↓⍉↑1↓coords ⋄ xse yse←xsb ysb+↓⍉↑1↓sizes
+	∨⌿(xb<xse)∧(xe>xsb)∧(yb<yse)∧(ye>ysb)
+}
 
 SUCC←{⎕←'Thanks for playing!'}
 FAIL←{⎕←obj evt dat ⋄ ⎕←'Encountered an unrecoverable error. Exiting...'}
@@ -91,11 +102,13 @@ GODOWN←{ship_input[0]←1} ⋄ NODOWN←{ship_input[0]←0}
 GOUP←{ship_input[1]←1} ⋄ NOUP←{ship_input[1]←0}
 GOLEFT←{ship_input[2]←1} ⋄ NOLEFT←{ship_input[2]←0}
 GORIGHT←{ship_input[3]←1} ⋄ NORIGHT←{ship_input[3]←0}
+DEAD←{vels×←0 ⋄ msg_color∘←0 ⋄ msg∘←'You''re dead, Jim.'}
 RENDER←{
 	dirs[0]←+⌿ship_input×ship_dir
 	coords∘←(⊂frame_size)⌊0⌈⌊coords+vels×dirs
 	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
-	1:_←DRC.Send gui (('render(',args,');') 1 1)
+	color←('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
+	1:_←DRC.Send gui (('render("',msg,'", "#',color,'",',args,');') 1 1)
 }
 
 ∆_:→⎕LC+LISTEN⍬
@@ -110,6 +123,7 @@ RENDER←{
 ∆_KuLT:	rWAT⍬	⋄ ∘∘∘
 ∆_KuRT:	rWAT⍬	⋄ ∘∘∘
 ∆_TICK:		⋄ →∆_
+∆_BUMP:	rWAT⍬	⋄ ∘∘∘
 ∆_XT:	SUCC⍬	⋄ →0
 ∆_ERR:	FAIL⍬	⋄ ∘∘∘
 ∆_WAT:	rWAT⍬ 	⋄ ∘∘∘
@@ -126,6 +140,7 @@ RENDER←{
 ∆_CON_KuLT:	rWAT⍬		⋄ ∘∘∘
 ∆_CON_KuRT:	rWAT⍬		⋄ ∘∘∘
 ∆_CON_TICK:			⋄ →∆_CON_
+∆_CON_BUMP:	rWAT⍬		⋄ ∘∘∘
 ∆_CON_XT:	SUCC⍬		⋄ →0
 ∆_CON_ERR:	FAIL⍬		⋄ ∘∘∘
 ∆_CON_WAT:	rWAT⍬ 		⋄ ∘∘∘
@@ -142,6 +157,24 @@ RENDER←{
 ∆_CON_WSU_KuLT:	NOLEFT⍬ ⋄ RENDER⍬	⋄ →∆_CON_WSU_
 ∆_CON_WSU_KuRT:	NORIGHT⍬ ⋄ RENDER⍬	⋄ →∆_CON_WSU_
 ∆_CON_WSU_TICK:	RENDER⍬			⋄ →∆_CON_WSU_
+∆_CON_WSU_BUMP:	DEAD⍬ ⋄ RENDER⍬		⋄ →∆_CON_WSU_BUMP_
 ∆_CON_WSU_XT:	SUCC⍬			⋄ →0
 ∆_CON_WSU_ERR:	FAIL⍬			⋄ ∘∘∘
 ∆_CON_WSU_WAT:	rWAT⍬ 			⋄ ∘∘∘
+
+∆_CON_WSU_BUMP_:→⎕LC+LISTEN⍬
+∆_CON_WSU_BUMP_CON:	CLOSE⍬ ⋄ REG⍬	⋄ →∆_CON_
+∆_CON_WSU_BUMP_WSU:	rWAT⍬		⋄ ∘∘∘
+∆_CON_WSU_BUMP_KdDN:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KdUP:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KdLT:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KdRT:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KuDN:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KuUP:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KuLT:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KuRT:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_TICK:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_BUMP:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_XT:	SUCC⍬		⋄ →0
+∆_CON_WSU_BUMP_ERR:	FAIL⍬		⋄ ∘∘∘
+∆_CON_WSU_BUMP_WAT:	rWAT⍬ 		⋄ ∘∘∘
