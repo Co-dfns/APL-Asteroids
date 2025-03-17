@@ -1,4 +1,4 @@
-ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
+ASTEROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
 	;height;width;frame;frame_size;difficulty;bolt_at;gun_phase;shoot;score
 	;ship_dir;ship_input;is_collision;msg;msg_color
 	;coords;sizes;sprites;vels;dirs
