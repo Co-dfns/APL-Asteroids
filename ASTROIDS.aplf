@@ -35,11 +35,11 @@ _,←'function handle_keyup(evt) {'
 _,←'	s.send("KU_" + evt.key);'
 _,←'}'
 _,←'function render(msg, color, objs) {'
+_,←'	c.font = "50px Courier";'
+_,←'	c.fillStyle = color;'
 _,←'	for (let i = 0; i < objs.length; i++) {'
 _,←'		objs[i][0] = document.getElementById(objs[i][0]);'
 _,←'	}'
-_,←'	c.font = "50px Courier";'
-_,←'	c.fillStyle = color;'
 _,←'	c.clearRect(0, 0, d.width, d.height);'
 _,←'	for (let i = 0; i < objs.length; i++) {'
 _,←'		const obj = objs[i];'
@@ -72,10 +72,10 @@ LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 		'KD_ArrowUp'≡⊃dat:	KdUP	⍝ GUI Keydown ArrowUp
 		'KD_ArrowLeft'≡⊃dat:	KdLT	⍝ GUI Keydown ArrowLeft
 		'KD_ArrowRight'≡⊃dat:	KdRT	⍝ GUI Keydown ArrowRight
-		'KU_ArrowDown'≡⊃dat:	KuDN	⍝ GUI Keydown ArrowDown
-		'KU_ArrowUp'≡⊃dat:	KuUP	⍝ GUI Keydown ArrowUp
-		'KU_ArrowLeft'≡⊃dat:	KuLT	⍝ GUI Keydown ArrowLeft
-		'KU_ArrowRight'≡⊃dat:	KuRT	⍝ GUI Keydown ArrowRight
+		'KU_ArrowDown'≡⊃dat:	KuDN	⍝ GUI Keyup ArrowDown
+		'KU_ArrowUp'≡⊃dat:	KuUP	⍝ GUI Keyup ArrowUp
+		'KU_ArrowLeft'≡⊃dat:	KuLT	⍝ GUI Keyup ArrowLeft
+		'KU_ArrowRight'≡⊃dat:	KuRT	⍝ GUI Keyup ArrowRight
 		LISTEN⍬
 	}⍵
 	sWAT
@@ -110,8 +110,7 @@ RENDER←{
 	new_alien←'alien'(1+?7)({⍵=0+⍵}@1?0 0)((?⊃frame_size)0)(50 64)
 	sprites vels dirs coords sizes,←(0=?difficulty)⌿∘⊂¨new_alien
 	coords∘←⌊coords+vels×dirs
-	msk←1@0⊢∧⌿¨(0≤coords)∧coords<⊂frame_size
-	sprites vels dirs coords sizes⌿⍨←⊂msk
+	sprites vels dirs coords sizes⌿⍨←⊂1@0⊢∧⌿¨(0≤coords)∧coords<⊂frame_size
 	coords∘←(⊂frame_size)⌊0⌈coords
 	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
 	color←('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
