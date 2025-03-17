@@ -58,6 +58,7 @@ _,←'</head><body>'
 _,←'<display style="display:none;">'
 _,←'	<img id="ship" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9D85s3F9cYeXstj3B-WAq4LkbwlP0MXEnQqChi6nCPujANeH9GBbzc5sKQXavr1puezQI5-cnVlj2uPq8UAZfWckb9zPiOUfJnf5vCBedQViySuBSQeLJdHKM8J5E96KWz2hJYuqXOhU/s287/blueship2.png">'
 _,←'	<img id="alien" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi5IXayE0bMDvxRuQNVAD4Zg2L9FN9_nRRPUH8Z83_8zZyE9e7N8g4dRqcfyVTxssB52vGxcOE4LfGrFyhD0DnUEevBOPyL6XmHO3Oxjg5bHmnBim8wKQ56iunBlRdJxwm935gMlghqt6c/s302/aliensprite2.png">'
+_,←'	<img id="expl" src="https://opengameart.org/sites/default/files/explosion0.png">'
 _,←'</display>'
 _,←'<canvas id="d" height="480" width="640">Loading...</canvas>'
 _,←'</body></html>'
@@ -108,7 +109,10 @@ GODOWN←{ship_input[0]←1} ⋄ NODOWN←{ship_input[0]←0}
 GOUP←{ship_input[1]←1} ⋄ NOUP←{ship_input[1]←0}
 GOLEFT←{ship_input[2]←1} ⋄ NOLEFT←{ship_input[2]←0}
 GORIGHT←{ship_input[3]←1} ⋄ NORIGHT←{ship_input[3]←0}
-DEAD←{vels×←0 ⋄ msg_color∘←0 ⋄ msg∘←'You''re dead, Jim.'}
+DEAD←{
+	vels×←0 ⋄ sprites[0]←⊂'expl' ⋄ sizes[0]←⊂100 128 ⋄ coords[0]+←⊂¯50 ¯64
+	msg_color∘←0 ⋄ msg∘←'You''re dead, Jim.'
+}
 RENDER←{
 	dirs[0]←+⌿ship_input×ship_dir
 	difficulty∘←20⌈difficulty-1
