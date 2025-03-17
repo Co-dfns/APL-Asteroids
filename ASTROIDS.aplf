@@ -19,8 +19,9 @@ _,←'	body{overflow:hidden;margin:0px;padding:10px;background:#202020;}'
 _,←'	#d{border:1px solid green;display:block;padding:0px;margin:0px auto;}'
 _,←'</style>'
 _,←'<script>'
-_,←'var d, c, s;'
+_,←'var a, d, c, s;'
 _,←'function init() {'
+_,←'	a = document.getElementById("au_laser");'
 _,←'	d = document.getElementById("d");'
 _,←'	c = d.getContext("2d");'
 _,←'	s = new WebSocket("ws://localhost:4572/");'
@@ -34,7 +35,7 @@ _,←'}'
 _,←'function handle_keyup(evt) {'
 _,←'	s.send("KU_" + evt.key);'
 _,←'}'
-_,←'function render(msg, color, diff, score, objs) {'
+_,←'function render(msg, color, diff, score, fire, objs) {'
 _,←'	console.log(score);'
 _,←'	for (let i = 0; i < objs.length; i++) {'
 _,←'		objs[i][0] = document.getElementById(objs[i][0]);'
@@ -55,6 +56,7 @@ _,←'	c.fillText(msg, 75, 250);'
 _,←'	c.font = "30px Courier";'
 _,←'	c.fillStyle = "white";'
 _,←'	c.fillText(score, 30, 30);'
+_,←'	if (fire) a.play();'
 _,←'}'
 _,←'window.onload = init;'
 _,←'</script>'
@@ -64,6 +66,7 @@ _,←'	<img id="ship" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/
 _,←'	<img id="alien" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi5IXayE0bMDvxRuQNVAD4Zg2L9FN9_nRRPUH8Z83_8zZyE9e7N8g4dRqcfyVTxssB52vGxcOE4LfGrFyhD0DnUEevBOPyL6XmHO3Oxjg5bHmnBim8wKQ56iunBlRdJxwm935gMlghqt6c/s302/aliensprite2.png">'
 _,←'	<img id="expl" src="https://opengameart.org/sites/default/files/explosion0.png">'
 _,←'	<img id="bolt" src="https://github.com/Co-dfns/APL-Astroids/blob/master/laser2.png?raw=true">'
+_,←'	<audio id="au_laser" auto_play="false"><source src="https://opengameart.org/sites/default/files/laser1.mp3" type="audio/mpeg"></audio>'
 _,←'</display>'
 _,←'<canvas id="d" height="480" width="640">Loading...</canvas>'
 _,←'</body></html>'
@@ -130,7 +133,7 @@ RENDER←{
 	new_alien←'alien'(1+?7)({⍵=0+⍵}@1?0 0)((?⊃frame_size)0)(50 64)
 	sprites vels dirs coords sizes,←(0=?difficulty)⌿∘⊂¨new_alien
 	new_bolt←bolt_at 0⊃coords ⋄ gun_phase∘←10|gun_phase+1
-	sprites vels dirs coords sizes,←(shoot∧0=gun_phase)⌿∘⊂¨new_bolt
+	sprites vels dirs coords sizes,←(fire←shoot∧0=gun_phase)⌿∘⊂¨new_bolt
 	coords∘←⌊coords+vels×dirs
 	sprites vels dirs coords sizes⌿⍨←⊂1@0⊢∧⌿¨(0≤coords)∧coords<⊂frame_size
 	lasers←sprites∊⊂'bolt' ⋄ aliens←sprites∊⊂'alien'
@@ -143,7 +146,7 @@ RENDER←{
 	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
 	color←'#',('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
 	diff←'#',('0123456789ABCDEF'[16 16⊤⌊(256÷500)×500-difficulty]),'0000'
-	1:_←DRC.Send gui (('render("',msg,'", "',color,'","',diff,'",',(⍕score),',',args,');') 1 1)
+	1:_←DRC.Send gui (('render("',msg,'", "',color,'","',diff,'",',(⍕score),',',(⍕fire),',',args,');') 1 1)
 }
 
 ∆_:→⎕LC+LISTEN⍬
