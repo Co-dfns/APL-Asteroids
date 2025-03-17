@@ -1,5 +1,5 @@
 ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
-	;height;width;frame;frame_size;difficulty;bolt_at;gun_phase;shoot
+	;height;width;frame;frame_size;difficulty;bolt_at;gun_phase;shoot;score
 	;ship_dir;ship_input;is_collision;msg;msg_color
 	;coords;sizes;sprites;vels;dirs
 	;CON;WSU;KdDN;KdUP;KdLT;KdRT;KuDN;KuUP;KuLT;KuRT;KdSP;KuSP;BUMP;TICK;XT;ERR;sWAT
@@ -34,7 +34,8 @@ _,←'}'
 _,←'function handle_keyup(evt) {'
 _,←'	s.send("KU_" + evt.key);'
 _,←'}'
-_,←'function render(msg, color, diff, objs) {'
+_,←'function render(msg, color, diff, score, objs) {'
+_,←'	console.log(score);'
 _,←'	for (let i = 0; i < objs.length; i++) {'
 _,←'		objs[i][0] = document.getElementById(objs[i][0]);'
 _,←'	}'
@@ -51,6 +52,9 @@ _,←'		const obj = objs[i];'
 _,←'		c.drawImage(obj[0], obj[1], obj[2], obj[3], obj[4]);'
 _,←'	}'
 _,←'	c.fillText(msg, 75, 250);'
+_,←'	c.font = "30px Courier";'
+_,←'	c.fillStyle = "white";'
+_,←'	c.fillText(score, 30, 30);'
 _,←'}'
 _,←'window.onload = init;'
 _,←'</script>'
@@ -95,7 +99,7 @@ sprites←'ship' 'alien'
 vels←4 1 ⋄ dirs←(0 0)(0 1) ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
 ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0) ⋄ gun_phase←0 ⋄ shoot←0
 msg←'' ⋄ msg_color←0
-difficulty←500
+difficulty←500 ⋄ score←0
 
 is_collision←{
 	msk←sprites∊⊂'alien'
@@ -133,12 +137,13 @@ RENDER←{
 	lxs lys←↓⍉↑lasers⌿coords ⋄ lxe lye←lxs lys+↓⍉↑lasers⌿sizes
 	axs ays←↓⍉↑aliens⌿coords ⋄ axe aye←axs ays+↓⍉↑aliens⌿sizes
 	msk←(axs∘.<lxe)∧(axe∘.>lxs)∧(ays∘.<lye)∧(aye∘.>lys)
+	score+←+⌿∨/msk
 	sprites vels dirs coords sizes⌿⍨←⊂(aliens⍀∨/msk)⍱lasers⍀∨⌿msk
 	coords∘←(⊂frame_size)⌊0⌈coords
 	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
 	color←'#',('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
 	diff←'#',('0123456789ABCDEF'[16 16⊤⌊(256÷500)×500-difficulty]),'0000'
-	1:_←DRC.Send gui (('render("',msg,'", "',color,'","',diff,'",',args,');') 1 1)
+	1:_←DRC.Send gui (('render("',msg,'", "',color,'","',diff,'",',(⍕score),',',args,');') 1 1)
 }
 
 ∆_:→⎕LC+LISTEN⍬
