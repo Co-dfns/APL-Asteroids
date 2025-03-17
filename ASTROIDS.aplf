@@ -34,13 +34,18 @@ _,←'}'
 _,←'function handle_keyup(evt) {'
 _,←'	s.send("KU_" + evt.key);'
 _,←'}'
-_,←'function render(msg, color, objs) {'
-_,←'	c.font = "50px Courier";'
-_,←'	c.fillStyle = color;'
+_,←'function render(msg, color, diff, objs) {'
 _,←'	for (let i = 0; i < objs.length; i++) {'
 _,←'		objs[i][0] = document.getElementById(objs[i][0]);'
 _,←'	}'
+_,←'	var g = c.createLinearGradient(0,0,25,480);'
+_,←'	g.addColorStop(1, "#000000");'
+_,←'	g.addColorStop(0, diff);'
 _,←'	c.clearRect(0, 0, d.width, d.height);'
+_,←'	c.fillStyle = g;'
+_,←'	c.fillRect(0, 0, 25, 480);'
+_,←'	c.font = "50px Courier";'
+_,←'	c.fillStyle = color;'
 _,←'	for (let i = 0; i < objs.length; i++) {'
 _,←'		const obj = objs[i];'
 _,←'		c.drawImage(obj[0], obj[1], obj[2], obj[3], obj[4]);'
@@ -113,8 +118,9 @@ RENDER←{
 	sprites vels dirs coords sizes⌿⍨←⊂1@0⊢∧⌿¨(0≤coords)∧coords<⊂frame_size
 	coords∘←(⊂frame_size)⌊0⌈coords
 	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
-	color←('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
-	1:_←DRC.Send gui (('render("',msg,'", "#',color,'",',args,');') 1 1)
+	color←'#',('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
+	diff←'#',('0123456789ABCDEF'[16 16⊤⌊(256÷500)×500-difficulty]),'0000'
+	1:_←DRC.Send gui (('render("',msg,'", "',color,'","',diff,'",',args,');') 1 1)
 }
 
 ∆_:→⎕LC+LISTEN⍬
