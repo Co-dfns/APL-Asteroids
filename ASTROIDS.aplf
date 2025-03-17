@@ -1,10 +1,10 @@
 ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
-	;height;width;frame;frame_size;difficulty
+	;height;width;frame;frame_size;difficulty;bolt_at;gun_phase;shoot
 	;ship_dir;ship_input;is_collision;msg;msg_color
 	;coords;sizes;sprites;vels;dirs
-	;CON;WSU;KdDN;KdUP;KdLT;KdRT;KuDN;KuUP;KuLT;KuRT;BUMP;TICK;XT;ERR;sWAT
-	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE;GODOWN;GOUP;GOLEFT;GORIGHT;DEAD
-	;NODOWN;NOUP;NOLEFT;NORIGHT
+	;CON;WSU;KdDN;KdUP;KdLT;KdRT;KuDN;KuUP;KuLT;KuRT;KdSP;KuSP;BUMP;TICK;XT;ERR;sWAT
+	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE;GODOWN;GOUP;GOLEFT;GORIGHT;GOFIRE;DEAD
+	;NODOWN;NOUP;NOLEFT;NORIGHT;NOFIRE
 
 'Conga'⎕CY'conga'
 DRC←Conga.Init'ASTROIDS'
@@ -59,12 +59,13 @@ _,←'<display style="display:none;">'
 _,←'	<img id="ship" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9D85s3F9cYeXstj3B-WAq4LkbwlP0MXEnQqChi6nCPujANeH9GBbzc5sKQXavr1puezQI5-cnVlj2uPq8UAZfWckb9zPiOUfJnf5vCBedQViySuBSQeLJdHKM8J5E96KWz2hJYuqXOhU/s287/blueship2.png">'
 _,←'	<img id="alien" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi5IXayE0bMDvxRuQNVAD4Zg2L9FN9_nRRPUH8Z83_8zZyE9e7N8g4dRqcfyVTxssB52vGxcOE4LfGrFyhD0DnUEevBOPyL6XmHO3Oxjg5bHmnBim8wKQ56iunBlRdJxwm935gMlghqt6c/s302/aliensprite2.png">'
 _,←'	<img id="expl" src="https://opengameart.org/sites/default/files/explosion0.png">'
+_,←'	<img id="bolt" src="https://github.com/Co-dfns/APL-Astroids/blob/master/laser2.png?raw=true">'
 _,←'</display>'
 _,←'<canvas id="d" height="480" width="640">Loading...</canvas>'
 _,←'</body></html>'
 hr.HTML←_
 
-CON WSU KdDN KdUP KdLT KdRT KuDN KuUP KuLT KuRT TICK BUMP XT ERR sWAT←1+⍳15
+CON WSU KdDN KdUP KdLT KdRT KuDN KuUP KuLT KuRT KdSP KuSP TICK BUMP XT ERR sWAT←1+⍳17
 LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 	{0::1 ⋄ 0⊣hr.Active}⍬:		XT	⍝ Application closed by user
 	is_collision⍬:			BUMP	⍝ Ship has hit something
@@ -78,10 +79,12 @@ LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 		'KD_ArrowUp'≡⊃dat:	KdUP	⍝ GUI Keydown ArrowUp
 		'KD_ArrowLeft'≡⊃dat:	KdLT	⍝ GUI Keydown ArrowLeft
 		'KD_ArrowRight'≡⊃dat:	KdRT	⍝ GUI Keydown ArrowRight
+		'KD_ '≡⊃dat:	KdSP	⍝ GUI Keydown Space
 		'KU_ArrowDown'≡⊃dat:	KuDN	⍝ GUI Keyup ArrowDown
 		'KU_ArrowUp'≡⊃dat:	KuUP	⍝ GUI Keyup ArrowUp
 		'KU_ArrowLeft'≡⊃dat:	KuLT	⍝ GUI Keyup ArrowLeft
 		'KU_ArrowRight'≡⊃dat:	KuRT	⍝ GUI Keyup ArrowRight
+		'KU_ '≡⊃dat:	KuSP	⍝ GUI Keyup Space
 		LISTEN⍬
 	}⍵
 	sWAT
@@ -90,15 +93,17 @@ LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 frame_size←640 480 ⋄ frame←0
 sprites←'ship' 'alien'
 vels←4 1 ⋄ dirs←(0 0)(0 1) ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
-ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0)
+ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0) ⋄ gun_phase←0 ⋄ shoot←0
 msg←'' ⋄ msg_color←0
 difficulty←500
 
 is_collision←{
+	msk←sprites∊⊂'alien'
 	xb yb←0⊃coords ⋄ xe ye←xb yb+0⊃sizes
-	xsb ysb←↓⍉↑1↓coords ⋄ xse yse←xsb ysb+↓⍉↑1↓sizes
+	xsb ysb←↓⍉↑msk⌿coords ⋄ xse yse←xsb ysb+↓⍉↑msk⌿sizes
 	∨⌿(xb<xse)∧(xe>xsb)∧(yb<yse)∧(ye>ysb)
 }
+bolt_at←{'bolt' 10 (0 ¯1)(⍵)(25 25)}
 
 SUCC←{⎕←'Thanks for playing!'}
 FAIL←{⎕←obj evt dat ⋄ ⎕←'Encountered an unrecoverable error. Exiting...'}
@@ -109,8 +114,10 @@ GODOWN←{ship_input[0]←1} ⋄ NODOWN←{ship_input[0]←0}
 GOUP←{ship_input[1]←1} ⋄ NOUP←{ship_input[1]←0}
 GOLEFT←{ship_input[2]←1} ⋄ NOLEFT←{ship_input[2]←0}
 GORIGHT←{ship_input[3]←1} ⋄ NORIGHT←{ship_input[3]←0}
+GOFIRE←{shoot∘←1} ⋄ NOFIRE←{shoot∘←0}
 DEAD←{
 	vels×←0 ⋄ sprites[0]←⊂'expl' ⋄ sizes[0]←⊂100 128 ⋄ coords[0]+←⊂¯50 ¯64
+	shoot∘←0
 	msg_color∘←0 ⋄ msg∘←'You''re dead, Jim.'
 }
 RENDER←{
@@ -118,6 +125,8 @@ RENDER←{
 	difficulty∘←20⌈difficulty-1
 	new_alien←'alien'(1+?7)({⍵=0+⍵}@1?0 0)((?⊃frame_size)0)(50 64)
 	sprites vels dirs coords sizes,←(0=?difficulty)⌿∘⊂¨new_alien
+	new_bolt←bolt_at 0⊃coords ⋄ gun_phase∘←10|gun_phase+1
+	sprites vels dirs coords sizes,←(shoot∧0=gun_phase)⌿∘⊂¨new_bolt
 	coords∘←⌊coords+vels×dirs
 	sprites vels dirs coords sizes⌿⍨←⊂1@0⊢∧⌿¨(0≤coords)∧coords<⊂frame_size
 	coords∘←(⊂frame_size)⌊0⌈coords
@@ -138,6 +147,8 @@ RENDER←{
 ∆_KuUP:	rWAT⍬	⋄ ∘∘∘
 ∆_KuLT:	rWAT⍬	⋄ ∘∘∘
 ∆_KuRT:	rWAT⍬	⋄ ∘∘∘
+∆_KdSP:	rWAT⍬	⋄ ∘∘∘
+∆_KuSP:	rWAT⍬	⋄ ∘∘∘
 ∆_TICK:		⋄ →∆_
 ∆_BUMP:	rWAT⍬	⋄ ∘∘∘
 ∆_XT:	SUCC⍬	⋄ →0
@@ -155,6 +166,8 @@ RENDER←{
 ∆_CON_KuUP:	rWAT⍬		⋄ ∘∘∘
 ∆_CON_KuLT:	rWAT⍬		⋄ ∘∘∘
 ∆_CON_KuRT:	rWAT⍬		⋄ ∘∘∘
+∆_CON_KdSP:	rWAT⍬		⋄ ∘∘∘
+∆_CON_KuSP:	rWAT⍬		⋄ ∘∘∘
 ∆_CON_TICK:			⋄ →∆_CON_
 ∆_CON_BUMP:	rWAT⍬		⋄ ∘∘∘
 ∆_CON_XT:	SUCC⍬		⋄ →0
@@ -172,6 +185,8 @@ RENDER←{
 ∆_CON_WSU_KuUP:	NOUP⍬ ⋄ RENDER⍬		⋄ →∆_CON_WSU_
 ∆_CON_WSU_KuLT:	NOLEFT⍬ ⋄ RENDER⍬	⋄ →∆_CON_WSU_
 ∆_CON_WSU_KuRT:	NORIGHT⍬ ⋄ RENDER⍬	⋄ →∆_CON_WSU_
+∆_CON_WSU_KdSP:	GOFIRE⍬ ⋄ RENDER⍬	⋄ →∆_CON_WSU_
+∆_CON_WSU_KuSP:	NOFIRE⍬ ⋄ RENDER⍬	⋄ →∆_CON_WSU_
 ∆_CON_WSU_TICK:	RENDER⍬			⋄ →∆_CON_WSU_
 ∆_CON_WSU_BUMP:	DEAD⍬ ⋄ RENDER⍬		⋄ →∆_CON_WSU_BUMP_
 ∆_CON_WSU_XT:	SUCC⍬			⋄ →0
@@ -189,6 +204,8 @@ RENDER←{
 ∆_CON_WSU_BUMP_KuUP:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
 ∆_CON_WSU_BUMP_KuLT:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
 ∆_CON_WSU_BUMP_KuRT:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KdSP:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
+∆_CON_WSU_BUMP_KuSP:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
 ∆_CON_WSU_BUMP_TICK:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
 ∆_CON_WSU_BUMP_BUMP:	RENDER⍬		⋄ →∆_CON_WSU_BUMP_
 ∆_CON_WSU_BUMP_XT:	SUCC⍬		⋄ →0
