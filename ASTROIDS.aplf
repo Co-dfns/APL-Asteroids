@@ -1,5 +1,5 @@
 ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
-	;height;width;frame;frame_size
+	;height;width;frame;frame_size;difficulty
 	;ship_dir;ship_input;is_collision;msg;msg_color
 	;coords;sizes;sprites;vels;dirs
 	;CON;WSU;KdDN;KdUP;KdLT;KdRT;KuDN;KuUP;KuLT;KuRT;BUMP;TICK;XT;ERR;sWAT
@@ -83,9 +83,10 @@ LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 
 frame_size←640 480 ⋄ frame←0
 sprites←'ship' 'alien'
-vels←3 1 ⋄ dirs←(0 0)(0 1) ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
+vels←4 1 ⋄ dirs←(0 0)(0 1) ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
 ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0)
 msg←'' ⋄ msg_color←0
+difficulty←500
 
 is_collision←{
 	xb yb←0⊃coords ⋄ xe ye←xb yb+0⊃sizes
@@ -105,7 +106,13 @@ GORIGHT←{ship_input[3]←1} ⋄ NORIGHT←{ship_input[3]←0}
 DEAD←{vels×←0 ⋄ msg_color∘←0 ⋄ msg∘←'You''re dead, Jim.'}
 RENDER←{
 	dirs[0]←+⌿ship_input×ship_dir
-	coords∘←(⊂frame_size)⌊0⌈⌊coords+vels×dirs
+	difficulty∘←20⌈difficulty-1
+	new_alien←'alien'(1+?7)({⍵=0+⍵}@1?0 0)((?⊃frame_size)0)(50 64)
+	sprites vels dirs coords sizes,←(0=?difficulty)⌿∘⊂¨new_alien
+	coords∘←⌊coords+vels×dirs
+	msk←1@0⊢∧⌿¨(0≤coords)∧coords<⊂frame_size
+	sprites vels dirs coords sizes⌿⍨←⊂msk
+	coords∘←(⊂frame_size)⌊0⌈coords
 	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
 	color←('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
 	1:_←DRC.Send gui (('render("',msg,'", "#',color,'",',args,');') 1 1)
