@@ -1,6 +1,7 @@
 ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
 	;height;width;frame;frame_size
-	;ship_vel;ship_pos;ship_input;ship_dir;ship_sprite;ship_width
+	;ship_dir;ship_input
+	;coords;sizes;sprites;vels
 	;CON;WSU;KdDN;KdUP;KdLT;KdRT;KuDN;KuUP;KuLT;KuRT;TICK;XT;ERR;sWAT
 	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE;GODOWN;GOUP;GOLEFT;GORIGHT
 	;NODOWN;NOUP;NOLEFT;NORIGHT
