@@ -33,16 +33,22 @@ _,←'}'
 _,←'function handle_keyup(evt) {'
 _,←'	s.send("KU_" + evt.key);'
 _,←'}'
-_,←'function render(sp, x, y, w, h) {'
+_,←'function render(objs) {'
+_,←'	for (let i = 0; i < objs.length; i++) {'
+_,←'		objs[i][0] = document.getElementById(objs[i][0]);'
+_,←'	}'
 _,←'	c.clearRect(0, 0, d.width, d.height);'
-_,←'	const img = document.getElementById(sp);'
-_,←'	c.drawImage(img, x, y, w, h);'
+_,←'	for (let i = 0; i < objs.length; i++) {'
+_,←'		const obj = objs[i];'
+_,←'		c.drawImage(obj[0], obj[1], obj[2], obj[3], obj[4]);'
+_,←'	}'
 _,←'}'
 _,←'window.onload = init;'
 _,←'</script>'
 _,←'</head><body>'
 _,←'<display style="display:none;">'
-_,←'	<img id="s0" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9D85s3F9cYeXstj3B-WAq4LkbwlP0MXEnQqChi6nCPujANeH9GBbzc5sKQXavr1puezQI5-cnVlj2uPq8UAZfWckb9zPiOUfJnf5vCBedQViySuBSQeLJdHKM8J5E96KWz2hJYuqXOhU/s287/blueship2.png">'
+_,←'	<img id="ship" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9D85s3F9cYeXstj3B-WAq4LkbwlP0MXEnQqChi6nCPujANeH9GBbzc5sKQXavr1puezQI5-cnVlj2uPq8UAZfWckb9zPiOUfJnf5vCBedQViySuBSQeLJdHKM8J5E96KWz2hJYuqXOhU/s287/blueship2.png">'
+_,←'	<img id="alien" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi5IXayE0bMDvxRuQNVAD4Zg2L9FN9_nRRPUH8Z83_8zZyE9e7N8g4dRqcfyVTxssB52vGxcOE4LfGrFyhD0DnUEevBOPyL6XmHO3Oxjg5bHmnBim8wKQ56iunBlRdJxwm935gMlghqt6c/s302/aliensprite2.png">'
 _,←'</display>'
 _,←'<canvas id="d" height="480" width="640">Loading...</canvas>'
 _,←'</body></html>'
@@ -71,7 +77,8 @@ LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 }
 
 frame_size←640 480 ⋄ frame←0
-ship_sprite←'s0' ⋄ ship_width←25 48 ⋄ ship_vel←3 ⋄ ship_pos←300 200
+sprites←'ship' 'alien'
+vels←3 0 ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
 ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0)
 
 SUCC←{⎕←'Thanks for playing!'}
@@ -84,9 +91,9 @@ GOUP←{ship_input[1]←1} ⋄ NOUP←{ship_input[1]←0}
 GOLEFT←{ship_input[2]←1} ⋄ NOLEFT←{ship_input[2]←0}
 GORIGHT←{ship_input[3]←1} ⋄ NORIGHT←{ship_input[3]←0}
 RENDER←{
-	ship_pos⊢←frame_size|⌊ship_pos+ship_vel×⊃+⌿ship_input×ship_dir
-	args←{⍺,',',⍵}⌿⍕¨(⊂'"',ship_sprite,'"'),ship_pos,ship_width
-	1:_←DRC.Send gui ((⍕'render(',args,');') 1 1)
+	coords[0]←(⊂frame_size)⌊0⌈⌊coords[0]+vels[0]×+⌿ship_input×ship_dir
+	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
+	1:_←DRC.Send gui (('render(',args,');') 1 1)
 }
 
 ∆_:→⎕LC+LISTEN⍬
