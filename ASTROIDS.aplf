@@ -1,7 +1,7 @@
 ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
 	;height;width;frame;frame_size
 	;ship_dir;ship_input
-	;coords;sizes;sprites;vels
+	;coords;sizes;sprites;vels;dirs
 	;CON;WSU;KdDN;KdUP;KdLT;KdRT;KuDN;KuUP;KuLT;KuRT;TICK;XT;ERR;sWAT
 	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE;GODOWN;GOUP;GOLEFT;GORIGHT
 	;NODOWN;NOUP;NOLEFT;NORIGHT
@@ -79,7 +79,7 @@ LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 
 frame_size←640 480 ⋄ frame←0
 sprites←'ship' 'alien'
-vels←3 0 ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
+vels←3 1 ⋄ dirs←(0 0)(0 1) ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
 ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0)
 
 SUCC←{⎕←'Thanks for playing!'}
@@ -92,7 +92,8 @@ GOUP←{ship_input[1]←1} ⋄ NOUP←{ship_input[1]←0}
 GOLEFT←{ship_input[2]←1} ⋄ NOLEFT←{ship_input[2]←0}
 GORIGHT←{ship_input[3]←1} ⋄ NORIGHT←{ship_input[3]←0}
 RENDER←{
-	coords[0]←(⊂frame_size)⌊0⌈⌊coords[0]+vels[0]×+⌿ship_input×ship_dir
+	dirs[0]←+⌿ship_input×ship_dir
+	coords∘←(⊂frame_size)⌊0⌈⌊coords+vels×dirs
 	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
 	1:_←DRC.Send gui (('render(',args,');') 1 1)
 }
