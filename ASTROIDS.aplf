@@ -1,5 +1,5 @@
 ASTROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
-	;frame
+	;height;width;frame;ship_vel;ship_pos;ship_dir;ship_sprite
 	;CON;WSU;TICK;XT;ERR;sWAT
 	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE
 
@@ -23,15 +23,23 @@ _,←'	c = d.getContext("2d");'
 _,←'	s = new WebSocket("ws://localhost:4572/");'
 _,←'	s.onmessage = (evt) => {eval(evt.data);};'
 _,←'}'
+_,←'function render(sp, x, y, w, h) {'
+_,←'	c.clearRect(0, 0, d.width, d.height);'
+_,←'	const img = document.getElementById(sp);'
+_,←'	c.drawImage(img, x, y, w, h);'
+_,←'}'
 _,←'window.onload = init;'
 _,←'</script>'
 _,←'</head><body>'
+_,←'<display style="display:none;">'
+_,←'	<img id="s0" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9D85s3F9cYeXstj3B-WAq4LkbwlP0MXEnQqChi6nCPujANeH9GBbzc5sKQXavr1puezQI5-cnVlj2uPq8UAZfWckb9zPiOUfJnf5vCBedQViySuBSQeLJdHKM8J5E96KWz2hJYuqXOhU/s287/blueship2.png">'
+_,←'</display>'
 _,←'<canvas id="d" height="480" width="640">Loading...</canvas>'
 _,←'</body></html>'
 hr.HTML←_
 
 CON WSU TICK XT ERR sWAT←1+⍳6
-LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 100
+LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 	{0::1 ⋄ 0⊣hr.Active}⍬:	XT	⍝ Application closed by user
 	100=rc:			TICK	⍝ Timeout
 	0≠rc:			ERR	⍝ Error in serv
@@ -41,19 +49,21 @@ LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 100
 	sWAT
 }
 
-frame←0
+frame_size←640 480 ⋄ frame←0
+ship_sprite←'s0' ⋄ ship_width←25 48 ⋄ ship_vel←0 ¯2 ⋄ ship_pos←300 200 ⋄ ship_dir←180
+
+step←{
+	1:ship_pos⊢←frame_size|⌊ship_vel+ship_pos
+}
 
 SUCC←{⎕←'Thanks for playing!'}
 FAIL←{⎕←obj evt dat ⋄ ⎕←'Encountered an unrecoverable error. Exiting...'}
 rWAT←{⎕←obj evt dat ⋄ ⎕←'Wat? This should not happen. SEND HELP!'}
 REG←{gui∘←obj}
 CLOSE←{_←DRC.Close gui}
-RENDER←{frame∘←4|frame+1 ⋄ _←''
-	_,←'c.clearRect(0, 0, 600, 640);'
-	_,←'c.font = "100px Courier";'
-	_,←'c.fillStyle = "white";'
-	_,←'c.fillText("',((7+frame)↑'Loading...'),'", 10, 110);'
-	_←DRC.Send gui (_ 1 1)
+RENDER←{_←step⍬
+	args←{⍺,',',⍵}⌿⍕¨(⊂'"',ship_sprite,'"'),ship_pos,ship_width,ship_dir
+	1:_←DRC.Send gui ((⍕'render(',args,');') 1 1)
 }
 
 ∆_:→⎕LC+LISTEN⍬
