@@ -129,6 +129,11 @@ RENDER←{
 	sprites vels dirs coords sizes,←(shoot∧0=gun_phase)⌿∘⊂¨new_bolt
 	coords∘←⌊coords+vels×dirs
 	sprites vels dirs coords sizes⌿⍨←⊂1@0⊢∧⌿¨(0≤coords)∧coords<⊂frame_size
+	lasers←sprites∊⊂'bolt' ⋄ aliens←sprites∊⊂'alien'
+	lxs lys←↓⍉↑lasers⌿coords ⋄ lxe lye←lxs lys+↓⍉↑lasers⌿sizes
+	axs ays←↓⍉↑aliens⌿coords ⋄ axe aye←axs ays+↓⍉↑aliens⌿sizes
+	msk←(axs∘.<lxe)∧(axe∘.>lxs)∧(ays∘.<lye)∧(aye∘.>lys)
+	sprites vels dirs coords sizes⌿⍨←⊂(aliens⍀∨/msk)⍱lasers⍀∨⌿msk
 	coords∘←(⊂frame_size)⌊0⌈coords
 	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
 	color←'#',('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
