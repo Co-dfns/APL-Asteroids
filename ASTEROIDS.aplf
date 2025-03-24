@@ -13,7 +13,7 @@ srv←DRC.Srv '' 'localhost' 4572 'http' ('Options' DRC.Options.(WSAutoUpgrade))
 title←'Asteroids - Copyright (c) 2025 by Aaron W. Hsu'
 hr←⎕NEW'HtmlRenderer'(⊂'Caption' title)
 hr.(Coord Size)←'ScaledPixel' (540 680)
-_←'<!DOCTYPE html><html><head>'
+_←'<!DOCTYPE html>'
 _,←'<style>'
 _,←'	body{overflow:hidden;margin:0px;padding:10px;background:#202020;}'
 _,←'	#d{border:1px solid green;display:block;padding:0px;margin:0px auto;}'
@@ -59,16 +59,17 @@ _,←'	if (fire) a.play();'
 _,←'}'
 _,←'window.onload = init;'
 _,←'</script>'
-_,←'</head><body>'
 _,←'<display style="display:none;">'
-_,←'	<img id="ship" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9D85s3F9cYeXstj3B-WAq4LkbwlP0MXEnQqChi6nCPujANeH9GBbzc5sKQXavr1puezQI5-cnVlj2uPq8UAZfWckb9zPiOUfJnf5vCBedQViySuBSQeLJdHKM8J5E96KWz2hJYuqXOhU/s287/blueship2.png">'
-_,←'	<img id="alien" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi5IXayE0bMDvxRuQNVAD4Zg2L9FN9_nRRPUH8Z83_8zZyE9e7N8g4dRqcfyVTxssB52vGxcOE4LfGrFyhD0DnUEevBOPyL6XmHO3Oxjg5bHmnBim8wKQ56iunBlRdJxwm935gMlghqt6c/s302/aliensprite2.png">'
-_,←'	<img id="expl" src="https://opengameart.org/sites/default/files/explosion0.png">'
-_,←'	<img id="bolt" src="https://github.com/Co-dfns/APL-Asteroids/blob/master/laser2.png?raw=true">'
+_,←'	<!-- Credit MillionthVector https://millionthvector.blogspot.com/p/free-sprites.html -->'
+_,←'	<img id="ship" src="https://github.com/Co-dfns/APL-Asteroids/blob/master/blueship2.png?raw=true">'
+_,←'	<img id="alien" src="https://github.com/Co-dfns/APL-Asteroids/blob/master/aliensprite2.png?raw=true">'
+_,←'	<!-- Credit GameProgrammingSlave https://opengameart.org/content/explosions -->'
+_,←'	<img id="expl" src="https://github.com/Co-dfns/APL-Asteroids/blob/master/explosion0.png?raw=true">'
+_,←'	<!-- Credit Wenrexa https://opengameart.org/content/assets-free-laser-bullets-pack-2020 -->'
+_,←'	<img id="bolt" src="https://github.com/Co-dfns/APL-Asteroids/blob/master/laser.png?raw=true">'
 _,←'	<audio id="au_laser" auto_play="false"><source src="https://opengameart.org/sites/default/files/laser1.mp3" type="audio/mpeg"></audio>'
 _,←'</display>'
 _,←'<canvas id="d" height="480" width="640">Loading...</canvas>'
-_,←'</body></html>'
 hr.HTML←_
 
 CON WSU KdDN KdUP KdLT KdRT KuDN KuUP KuLT KuRT KdSP KuSP TICK BUMP XT ERR sWAT←1+⍳17
