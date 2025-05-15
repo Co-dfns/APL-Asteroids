@@ -6,6 +6,21 @@ ASTEROIDS;_;LISTEN;dat;DRC;srv;hr;title;rc;obj;evt;dat;gui;lc
 	;SUCC;FAIL;rWAT;RENDER;REG;CLOSE;GODOWN;GOUP;GOLEFT;GORIGHT;GOFIRE;DEAD
 	;NODOWN;NOUP;NOLEFT;NORIGHT;NOFIRE
 
+frame_size←640 480 ⋄ frame←0
+sprites←'ship' 'alien'
+vels←4 1 ⋄ dirs←(0 0)(0 1) ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
+ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0) ⋄ gun_phase←0 ⋄ shoot←0
+msg←'' ⋄ msg_color←0
+difficulty←500 ⋄ score←0
+
+is_collision←{
+	msk←sprites∊⊂'alien'
+	xb yb←0⊃coords ⋄ xe ye←xb yb+0⊃sizes
+	xsb ysb←↓⍉↑msk⌿coords ⋄ xse yse←xsb ysb+↓⍉↑msk⌿sizes
+	∨⌿(xb<xse)∧(xe>xsb)∧(yb<yse)∧(ye>ysb)
+}
+bolt_at←{'bolt' 10 (0 ¯1)(⍵)(25 25)}
+
 'Conga'⎕CY'conga'
 DRC←Conga.Init'ASTEROIDS'
 srv←DRC.Srv '' 'localhost' 4572 'http' ('Options' DRC.Options.(WSAutoUpgrade))
@@ -25,7 +40,7 @@ _,←'	a = document.getElementById("au_laser");'
 _,←'	d = document.getElementById("d");'
 _,←'	c = d.getContext("2d");'
 _,←'	s = new WebSocket("ws://localhost:4572/");'
-_,←'	s.onmessage = (evt) => {eval(evt.data);};'
+_,←'	s.onmessage = (evt) => {render(...JSON.parse(evt.data));};'
 _,←'	window.onkeydown = handle_keydown;'
 _,←'	window.onkeyup = handle_keyup;'
 _,←'}'
@@ -97,21 +112,6 @@ LISTEN←{rc←⊃z←DRC.Wait (1⊃srv) 15
 	sWAT
 }
 
-frame_size←640 480 ⋄ frame←0
-sprites←'ship' 'alien'
-vels←4 1 ⋄ dirs←(0 0)(0 1) ⋄ coords←(300 200)(300 0) ⋄ sizes←(25 48)(50 64)
-ship_input←0 0 0 0 ⋄ ship_dir←(0 1)(0 ¯1)(¯1 0)(1 0) ⋄ gun_phase←0 ⋄ shoot←0
-msg←'' ⋄ msg_color←0
-difficulty←500 ⋄ score←0
-
-is_collision←{
-	msk←sprites∊⊂'alien'
-	xb yb←0⊃coords ⋄ xe ye←xb yb+0⊃sizes
-	xsb ysb←↓⍉↑msk⌿coords ⋄ xse yse←xsb ysb+↓⍉↑msk⌿sizes
-	∨⌿(xb<xse)∧(xe>xsb)∧(yb<yse)∧(ye>ysb)
-}
-bolt_at←{'bolt' 10 (0 ¯1)(⍵)(25 25)}
-
 SUCC←{⎕←'Thanks for playing!'}
 FAIL←{⎕←obj evt dat ⋄ ⎕←'Encountered an unrecoverable error. Exiting...'}
 rWAT←{⎕←obj evt dat ⋄ ⎕←'Wat? This should not happen. SEND HELP!'}
@@ -143,10 +143,10 @@ RENDER←{
 	score+←+⌿∨/msk
 	sprites vels dirs coords sizes⌿⍨←⊂(aliens⍀∨/msk)⍱lasers⍀∨⌿msk
 	coords∘←(⊂frame_size)⌊0⌈coords
-	args←⎕JSON (⊂¨sprites),¨coords,¨sizes
 	color←'#',('0123456789ABCDEF'[16 16⊤msg_color∘←256|msg_color+10]),'0000'
 	diff←'#',('0123456789ABCDEF'[16 16⊤⌊(256÷500)×500-difficulty]),'0000'
-	1:_←DRC.Send gui (('render("',msg,'", "',color,'","',diff,'",',(⍕score),',',(⍕fire),',',args,');') 1 1)
+	data←⎕JSON msg color diff score fire ((⊂¨sprites),¨coords,¨sizes)
+	1:_←DRC.Send gui (data 1 1)
 }
 
 ∆_:→⎕LC+LISTEN⍬
